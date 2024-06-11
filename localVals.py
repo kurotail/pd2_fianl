@@ -1,0 +1,1 @@
+SUDOKU_URL = "https://sudoku-online.com/"
