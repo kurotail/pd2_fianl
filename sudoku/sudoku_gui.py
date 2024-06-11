@@ -1,4 +1,4 @@
-import tkinter, keyboard, functools, threading, sudoku.sudoku as sudoku
+import tkinter, keyboard, functools, threading, sudoku
 import tkinter.font as tkfont
 
 class win:
