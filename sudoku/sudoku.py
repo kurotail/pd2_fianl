@@ -218,7 +218,7 @@ class result:
         Both of them the integers in a board should be between 0 to 9.  "0" means the number remaining unknown.
         '''
         self.board = board
-        self.solve()
+        self._solve()
     
     def prettify(self, print_out: bool = False) -> str:
         for qwert in self.ans:
@@ -230,9 +230,9 @@ class result:
             print(answers)
         return(answers)
 
-    def solve(self):
+    def _solve(self):
         if type(self.board) == str:
-            board = self.transform(self.board)
+            board = self._transform(self.board)
         else:
             board = self.board
         a = _pri(board)
@@ -244,7 +244,7 @@ class result:
         self.HasSolution = bool(len(a.ans))
         self.count = len(a.ans)
     
-    def transform(self, board: str) -> list:
+    def _transform(self, board: str) -> list:
         if type(board) != str:
             raise TypeError('Input should be a string.')
         question = []
