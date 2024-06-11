@@ -199,23 +199,44 @@ class _pri:
                     raise ValueError('The integers in a board should be between 0 to 9.  "0" means the number remaining unknown.')
 
 class result:
+    ans: list
+    HasSolution: bool
+    count: int
+
     def __init__(self, board) -> None:
+        '''
+        Arg "board" accept both str and list of int.
+
+        For str, 
+        A board shoud be a str seperate 9 sub str by comma.
+        A board should contain 81 integers, 9 in each sub str.
+
+        For list, 
+        A board shoud be a two-dimensional list.
+        A board should contain 81 integers, in the form of a two-dimensional list.
+
+        Both of them the integers in a board should be between 0 to 9.  "0" means the number remaining unknown.
+        '''
         self.board = board
         self.solve()
     
-    def prettify(self) -> str:
+    def prettify(self, print_out: bool = False) -> str:
         for qwert in self.ans:
             answers = '========================\n'
             for asdfg in qwert:
                 answers = answers + str(asdfg) + '\n'
             answers = answers + '========================'
+        if print_out:
+            print(answers)
         return(answers)
 
     def solve(self):
         if type(self.board) == str:
-            self.solve(transform(self.board))
-            return
-        a = _pri(self.board)
+            board = self.transform(self.board)
+        else:
+            board = self.board
+        a = _pri(board)
+
         while len(a.nows):
             a.expend()
             a.futures_solve()
@@ -223,18 +244,20 @@ class result:
         self.HasSolution = bool(len(a.ans))
         self.count = len(a.ans)
     
-def transform(board: str) -> list:
-    if type(board) != str:
-        raise TypeError('Input should be a string.')
-    question = []
-    for x in board.split(','):
-        question.append([int(b) for b in list(x)])
-    return(question)
+    def transform(self, board: str) -> list:
+        if type(board) != str:
+            raise TypeError('Input should be a string.')
+        question = []
+        for x in board.split(','):
+            question.append([int(b) for b in list(x)])
+        return(question)
     
 
 #testing
 if __name__ == "__main__":
-    pass
+    ans = result([[9, 0, 0, 0, 0, 0, 0, 0, 2], [0, 0, 3, 7, 0, 9, 8, 0, 0], [0, 0, 4, 3, 6, 0, 1, 0, 0], [1, 0, 6, 0, 0, 0, 2, 0, 8], [0, 0, 9, 0, 4, 0, 7, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 7, 1, 3, 0, 6, 0, 0], [0, 0, 2, 6, 0, 5, 9, 0, 0], [3, 0, 0, 0, 0, 0, 0, 0, 7]])
+    ans.prettify(True)
+    print(ans.ans)
 
 #'900000002,003709800,004360100,106000208,009040700,000000000,007130600,002605900,300000007'
 #[[9, 0, 0, 0, 0, 0, 0, 0, 2], [0, 0, 3, 7, 0, 9, 8, 0, 0], [0, 0, 4, 3, 6, 0, 1, 0, 0], [1, 0, 6, 0, 0, 0, 2, 0, 8], [0, 0, 9, 0, 4, 0, 7, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 7, 1, 3, 0, 6, 0, 0], [0, 0, 2, 6, 0, 5, 9, 0, 0], [3, 0, 0, 0, 0, 0, 0, 0, 7]]
