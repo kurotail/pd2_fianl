@@ -46,10 +46,11 @@ class SudokuCrawler():
         
         timerElement = self.chrome.find_element(By.XPATH, "//*[@id='sudokuTimer']/div/span") #get timer element
         while True: 
+            self.chrome.switch_to.window(this_tab) #switch to this tab
             timer_t = datetime.strptime(timerElement.text, "%M:%S")
-            if timer_t.second > 0: #wait for sudoku table loaded
+            if timer_t.second > 1: #wait for sudoku table loaded
                 break
-            await asyncio.sleep(0.25)
+            await asyncio.sleep(0.5)
             
         self.chrome.switch_to.window(this_tab) #switch to this tab
         soup = bs4.BeautifulSoup(self.chrome.page_source, 'html.parser') #parse to soup
