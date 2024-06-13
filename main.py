@@ -51,9 +51,26 @@ sudoku_crawler = SudokuCrawler()
 
 @bot.hybrid_command(name="start_sudoku", with_app_command=True, description=descrip.start_sudoku)
 @commands.cooldown(1, 10, commands.BucketType.user)
-@app_commands.describe(difficulty = descrip.start_sudoku_difficulty)
 @app_commands.guilds(discord.Object(id = GUILD_ID))
-async def start_sudoku(ctx: commands.Context, difficulty:int) -> None:
+async def start_sudoku(ctx: commands.Context) -> None:
+    await ctx.defer(ephemeral = True)
+    reply_msg = await ctx.reply("正在讀取資料 <a:loading_dots:1093174815545888851>")
+    log_channel = bot.get_channel(1250654346861875200)
+    
+    if userBoards.have_board(ctx.author.id) == False:
+        await reply_msg.edit(content = "您沒有遊戲紀錄，請使用 /new_sudoku 來開啟新遊戲")
+        return
+    
+    await reply_msg.edit(
+        content = await userBoards.get_board_msg(ctx.author.id, log_channel),
+        view = SudokuView(ctx, reply_msg, log_channel)
+    )
+
+@bot.hybrid_command(name="new_sudoku", with_app_command=True, description=descrip.new_sudoku)
+@commands.cooldown(1, 10, commands.BucketType.user)
+@app_commands.describe(difficulty = descrip.new_sudoku_difficulty)
+@app_commands.guilds(discord.Object(id = GUILD_ID))
+async def new_sudoku(ctx: commands.Context, difficulty:int) -> None:
     await ctx.defer(ephemeral = True)
     reply_msg = await ctx.reply("正在爬取題目 <a:loading_dots:1093174815545888851>")
     log_channel = bot.get_channel(1250654346861875200)
@@ -67,9 +84,7 @@ async def start_sudoku(ctx: commands.Context, difficulty:int) -> None:
         )
         await confirm_view.wait() #等待回復是否開啟新遊戲
         
-        if confirm_view.value: #開啟新遊戲
-            await reply_msg.edit(content = "正在爬取題目 <a:loading_dots:1093174815545888851>")
-        elif confirm_view.value == False: #不開啟新遊戲
+        if confirm_view.value == False: #不開啟新遊戲
             
             confirm_view = ConfirmView(reply_msg)
             await reply_msg.edit(
@@ -86,20 +101,23 @@ async def start_sudoku(ctx: commands.Context, difficulty:int) -> None:
                 return
             
         if confirm_view.value != True: #按下取消或不繼續上次遊戲
-            await reply_msg.delete()
             return
     
-    try:
-        board = await sudoku_crawler.crawlBoard(difficulty)
-    except ValueError:
-        await reply_msg.edit(content = "難度必須在 0~3 之間")
-        return
-    
-    await reply_msg.edit(content = "正在分析題目 <a:loading_dots:1093174815545888851>")
-    ans = SudokuResult(board)
-    await asyncio.to_thread(ans.prettify)
+    while True:
+        await reply_msg.edit(content = "正在爬取題目 <a:loading_dots:1093174815545888851>")
+        try:
+            board = await sudoku_crawler.crawlBoard(difficulty)
+        except ValueError:
+            await reply_msg.edit(content = "難度必須在 0~3 之間")
+            return
+        
+        await reply_msg.edit(content = "正在分析題目 <a:loading_dots:1093174815545888851>")
+        ans = SudokuResult(board)
+        await asyncio.to_thread(ans.prettify)
+        if len(ans.ans) == 1:
+            break
+        
     userBoards.new_board(ctx.author.id, board, ans.ans, difficulty)
-    
     await reply_msg.edit(
         content = await userBoards.get_board_msg(ctx.author.id, log_channel),
         view = SudokuView(ctx, reply_msg, log_channel)

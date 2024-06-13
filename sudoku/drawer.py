@@ -1,9 +1,12 @@
 from PIL import Image, ImageDraw, ImageFont
+from botcore.classes import BoardData
 
 BG_COLOR = "#232428"
-GRIDBG_COLOR = ["#383a40", "#2e3035"]
-LINE_COLOR = "#dbdee1"
-DEFAULT_NUM_COLOR = "#dbdee1"
+GRIDBG_COLOR = ["#383A40", "#2E3035"]
+LINE_COLOR = "#F3F4F8"
+DEFAULT_NUM_COLOR = "#F3F4F8"
+USER_ANS_COLOR = "#2CA4F7"
+HINT_COLOR = "#6CD85B"
 HIGHLIGHT_COLOR = [
     (255, 255, 255, 50), #box, row, col highlight color
     (175, 211, 243, 100), #selected cell highlight color
@@ -16,7 +19,10 @@ MARGIN = 10
 GRID_SIZE = IMGSIZE[0] - 2 * MARGIN
 CELL_SIZE = GRID_SIZE // 9
 
-def draw_board(board:list) -> Image:
+def draw_board(board_data: BoardData) -> Image:
+    board = board_data.board
+    user_ans_board = board_data.user_ans_board
+    hint_board = board_data.hint_board
     image = Image.new("RGBA", IMGSIZE, color=BG_COLOR)
     draw = ImageDraw.Draw(image)
 
@@ -58,17 +64,28 @@ def draw_board(board:list) -> Image:
     font = ImageFont.truetype("arial.ttf", 30)
     for row in range(9):
         for col in range(9):
-            if board[row][col]:
-                number = str(board[row][col])
+            if board[row][col] or user_ans_board[row][col] or hint_board[row][col]:
+                number = str(board[row][col] + user_ans_board[row][col] + hint_board[row][col])
                 bbox = font.getbbox(number)
                 text_width, text_height = bbox[2] - bbox[0], bbox[3] - bbox[1]
                 text_x = start_x + col * CELL_SIZE + (CELL_SIZE - text_width) // 2
                 text_y = start_y + row * CELL_SIZE + (CELL_SIZE - text_height) // 2
+            if board[row][col]:
                 draw.text((text_x+1, text_y-3), number, fill=DEFAULT_NUM_COLOR, font=font)
+            if user_ans_board[row][col]:
+                draw.text((text_x+1, text_y-3), number, fill=USER_ANS_COLOR, font=font)
+            if hint_board[row][col]:
+                draw.text((text_x+1, text_y-3), number, fill=HINT_COLOR, font=font)
 
     return image
 
-def highlight_board(board:list, x:int, y:int, image:Image) -> Image:
+def highlight_board(board_data: BoardData, image:Image) -> Image:
+    board = board_data.board
+    user_ans_board = board_data.user_ans_board
+    hint_board = board_data.hint_board
+    x = board_data.x
+    y = board_data.y
+    
     mask = Image.new("RGBA", IMGSIZE, color=(0, 0, 0, 0))
     draw = ImageDraw.Draw(mask, 'RGBA')
 
@@ -110,9 +127,14 @@ def highlight_board(board:list, x:int, y:int, image:Image) -> Image:
     draw.rectangle(col_rect, fill = HIGHLIGHT_COLOR[0]) # 標示col
     draw.rectangle(cell_rect, fill = HIGHLIGHT_COLOR[1]) #標示cell
     
+    temp_board = [[0]*9 for i in range(9)]
+    for row in range(9): #merge user_ans_board, hint_board and default_board
+        for col in range(9):
+            temp_board[row][col] = board[row][col] + user_ans_board[row][col] + hint_board[row][col]
+            
     for row in range(9):
         for col in range(9):
-            if board[row][col] == board[y][x] and board[row][col] and row != y and col != x:
+            if temp_board[row][col] == temp_board[y][x] and temp_board[row][col] and (row != y or col != x):
                 cell_start_x = MARGIN + col * CELL_SIZE
                 cell_start_y = MARGIN + row * CELL_SIZE
                 draw.rectangle( #標示同數字的cell
