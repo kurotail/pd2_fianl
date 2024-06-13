@@ -17,7 +17,7 @@ class SudokuCrawler():
         opts.add_argument("--no-sandbox")
         if show_brower == False:
             opts.add_argument("--headless=new")
-        chrome_service=Service(ChromeDriverManager().install())
+        chrome_service = Service(ChromeDriverManager().install())
         self.chrome = webdriver.Chrome(service=chrome_service, options=opts)
         self.timeout = WebDriverWait(self.chrome, 10)
     
