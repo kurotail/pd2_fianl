@@ -83,54 +83,7 @@ def draw_board(board_data: BoardData) -> Image.Image:
 
     return image
 
-def draw_anime_correct(main_image: Image.Image) -> list[Image.Image]:
-    """
-    Draw a animation with a sign on the right-bottom corner based on main_image.
-    Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
-    Note that it is designed basing on 30fps.
-    :param main_image: the animation is based on main_image, which should be a solved game board.
-    """
-    
-    # Create a transparent layer with the same size as the main image
-    main_image = main_image.convert("RGBA")
-    background = Image.new('RGBA', main_image.size, (0, 0, 0, 0))
-    # Load and resize the images
-    resized_images: list[Image.Image] = []
-    gif = Image.open(localVals.CORRECT_ANI_PATH)
-    offset_0 = CORRECT_ANI_OFFSET_INIT[0]
-    offset_1 = CORRECT_ANI_OFFSET_INIT[1]
-    try:
-        while True:
-            offset = (offset_0, offset_1)
-            gif.seek(gif.tell() + 1)
-            frame = gif.copy()
-            resized_image: Image.Image = background.copy()
-            resized_image.paste(frame.resize(CORRECT_ANI_SIZE), offset)
-            resized_images.append(resized_image)
-            if abs(offset_0 - CORRECT_ANI_OFFSET[0]) > 10:
-                offset_0 += int((CORRECT_ANI_OFFSET[0] - CORRECT_ANI_OFFSET_INIT[0]) / 5)
-            if abs(offset_1 - CORRECT_ANI_OFFSET[1]) > 10:
-                offset_1 += int((CORRECT_ANI_OFFSET[1] - CORRECT_ANI_OFFSET_INIT[1]) / 5)
-    except EOFError:
-        pass
-    
-    # Create a list to hold the modified images
-    modified_images = []
-    
-    scan_frames = 30  # Number of frames for the scanning animation
-    for i in range(scan_frames):
-        mask = Image.new("RGBA", IMGSIZE, color=(0, 0, 0, 0))
-        draw = ImageDraw.Draw(mask, 'RGBA')
-        scan_width = int((i + 1) * (main_image.width / scan_frames))
-        draw.rectangle([0, 0, scan_width, main_image.height], fill=(0, 255, 0, 127))
-        modified_images.append(Image.alpha_composite(main_image, mask))
-
-    for img in resized_images:
-        modified_images.append(Image.alpha_composite(main_image, img))
-    
-    return modified_images
-
-def highlight_board(board_data: BoardData, image:Image) -> Image:
+def highlight_board(board_data: BoardData, image:Image) -> Image.Image:
     board = board_data.board
     user_ans_board = board_data.user_ans_board
     hint_board = board_data.hint_board
@@ -171,7 +124,6 @@ def highlight_board(board_data: BoardData, image:Image) -> Image:
         cell_start_x + CELL_SIZE,
         cell_start_y + CELL_SIZE
     ]
-
     
     draw.rectangle(box_rect, fill = HIGHLIGHT_COLOR[0]) # 標示3x3方格
     draw.rectangle(row_rect, fill = HIGHLIGHT_COLOR[0]) # 標示row
@@ -197,14 +149,74 @@ def highlight_board(board_data: BoardData, image:Image) -> Image:
                     ],
                     fill = HIGHLIGHT_COLOR[2]
                 )
-    
-    image = Image.alpha_composite(image, mask)
+        
+    return Image.alpha_composite(image, mask)
 
-    return image
+def animation_correct(main_image: Image.Image) -> list[Image.Image]:
+    """
+    Draw a animation with a sign on the right-bottom corner based on main_image.
+    Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
+    Note that it is designed basing on 30fps.
+    :param main_image: the animation is based on main_image, which should be a solved game board.
+    """
+    
+    # Create a transparent layer with the same size as the main image
+    main_image = main_image.convert("RGBA")
+    background = Image.new('RGBA', main_image.size, (0, 0, 0, 0))
+    # Load and resize the images
+    resized_images: list[Image.Image] = []
+    gif = Image.open(localVals.CORRECT_ANI_PATH)
+    offset_0 = CORRECT_ANI_OFFSET_INIT[0]
+    offset_1 = CORRECT_ANI_OFFSET_INIT[1]
+    try:
+        while True:
+            offset = (offset_0, offset_1)
+            gif.seek(gif.tell() + 1)
+            frame = gif.copy()
+            resized_image: Image.Image = background.copy()
+            resized_image.paste(frame.resize(CORRECT_ANI_SIZE), offset)
+            resized_images.append(resized_image)
+            if abs(offset_0 - CORRECT_ANI_OFFSET[0]) > 10:
+                offset_0 += int((CORRECT_ANI_OFFSET[0] - CORRECT_ANI_OFFSET_INIT[0]) / 5)
+            if abs(offset_1 - CORRECT_ANI_OFFSET[1]) > 10:
+                offset_1 += int((CORRECT_ANI_OFFSET[1] - CORRECT_ANI_OFFSET_INIT[1]) / 5)
+    except EOFError:
+        pass
+    
+    # Create a list to hold the modified images
+    modified_images = []
+    
+    #TODO
+    # width, height = main_image.size
+    # cells_x = width // CELL_SIZE
+    # cells_y = height // CELL_SIZE
+
+    # for y in range(cells_y):
+    #     for x in range(cells_x):
+    #         scan_img = main_image.copy()
+    #         draw = ImageDraw.Draw(scan_img)
+    #         draw.rectangle([MARGIN + x*CELL_SIZE, MARGIN + y*CELL_SIZE, (x+1)*CELL_SIZE, (y+1)*CELL_SIZE], fill=(0, 255, 0, 127))
+    #         modified_images.append(scan_img)
+
+    for img in resized_images:
+        modified_images.append(Image.alpha_composite(main_image, img))
+    
+    return modified_images
+
+def animation_scan() -> Image.Image:
+    raise NotImplementedError
+    #TODO
+    # scan_frames = 30  # Number of frames for the scanning animation
+    # for i in range(scan_frames):
+    #     mask = Image.new("RGBA", IMGSIZE, color=(0, 0, 0, 0))
+    #     draw = ImageDraw.Draw(mask, 'RGBA')
+    #     scan_width = int((i + 1) * (main_image.width / scan_frames))
+    #     draw.rectangle([0, 0, scan_width, main_image.height], fill=(0, 255, 0, 127))
+    #     modified_images.append(Image.alpha_composite(main_image, mask))
 
 if __name__ == "__main__":
     output_path = "./temp/correct.gif"
-    duration = 66
+    duration = 33
 
     board = [[9, 0, 0, 0, 0, 0, 0, 0, 2], [0, 0, 3, 7, 0, 9, 8, 0, 0], [0, 0, 4, 3, 6, 0, 1, 0, 0], [1, 0, 6, 0, 0, 0, 2, 0, 8], [0, 0, 9, 0, 4, 0, 7, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 7, 1, 3, 0, 6, 0, 0], [0, 0, 2, 6, 0, 5, 9, 0, 0], [3, 0, 0, 0, 0, 0, 0, 0, 7]]
     board_data = {
@@ -215,5 +227,5 @@ if __name__ == "__main__":
         "y": 0
     }
     board_img = draw_board(BoardData(board_data))
-    images = draw_anime_correct(board_img)
+    images = animation_correct(board_img)
     images[0].save(output_path, save_all=True, append_images=images[1:], duration=duration)
