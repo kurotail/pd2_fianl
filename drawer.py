@@ -179,10 +179,10 @@ class Animation:
     
     frames: list[Image.Image]
 
-    def __init__(self) -> None:
-        self.frames = []
+    def __init__(self, main_image: Image.Image) -> None:
+        self.frames = [main_image]
 
-    def animation_correct(self, main_image: Image.Image) -> list[Image.Image]:
+    def animation_correct(self) -> list[Image.Image]:
         """
         Draw a animation with a sign on the right-bottom corner based on main_image.
         Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
@@ -191,7 +191,7 @@ class Animation:
         """
 
         # Create a transparent layer with the same size as the main image
-        main_image = main_image.convert("RGBA")
+        main_image = self.frames[-1].convert("RGBA")
         background = Image.new('RGBA', main_image.size, (0, 0, 0, 0))
         # Load and resize the images
         resized_images: list[Image.Image] = []
@@ -234,7 +234,7 @@ class Animation:
         self.frames += modified_images
         return modified_images
 
-    def animation_scan(self, main_image: Image.Image, bool_array: list[list[bool]]) -> list[Image.Image]:
+    def animation_scan(self, bool_array: list[list[bool]]) -> list[Image.Image]:
         """
         Draw a animation of scanning from left-top to right-bottom based on main_image.
         Return a list of ```Image``` illustrating the scene of scanning the game board.
@@ -243,7 +243,7 @@ class Animation:
         :param bool_array: this method depend on it to draw the color of cell, which is ```bool_array[y][x]?RED:GREEN```.
         """
 
-        base_image: Image.Image = main_image.copy()
+        base_image: Image.Image = self.frames[-1].copy()
         modified_images: list[Image.Image] = [base_image]
 
         #diagnal line: y + x = i for i = 0, 1, ..., 16
@@ -264,9 +264,6 @@ class Animation:
 
         self.frames += modified_images
         return modified_images
-
-    def get(self, index: int) -> Image.Image:
-        return self.frames[index]
 
 if __name__ == "__main__":
     output_path = "./temp/correct.gif"
@@ -292,7 +289,7 @@ if __name__ == "__main__":
         [True,  True,  True,  False, False, True,  False, False, True]
     ]
     board_img = draw_board(BoardData(board_data))
-    ani = Animation()
-    ani.animation_scan(board_img, bool_array)
-    ani.animation_correct(ani.get(-1))
+    ani = Animation(board_img)
+    ani.animation_scan(bool_array)
+    ani.animation_correct()
     ani.frames[0].save(output_path, save_all=True, append_images=ani.frames[1:], duration=duration)

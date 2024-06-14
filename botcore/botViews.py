@@ -155,15 +155,11 @@ class SudokuView(discord.ui.View):
     async def button_finish(self, interaction: discord.Interaction, button: discord.ui.Button):
         if userBoards.check_ans(self.player_id)[0]:
             self.board_data.set_finish(True)
-            ans_result = "答案正確!\n"
-        else:
-            ans_result = "答案錯誤!\n"
         userBoards.set_user_board(self.player_id, self.board_data)
         self.update_btn_state()
-        await interaction.response.edit_message(
-            content = ans_result + await userBoards.get_board_msg(self.player_id, self.log_channel),
-            view = self
-        )
+        await interaction.response.edit_message(content = "正在檢查結果...", view = self)
+        edit_content = await userBoards.get_board_msg(self.player_id, self.log_channel, True)
+        await self.message.edit(content = edit_content, view = self)
 
     @discord.ui.button(label = "Close", style = discord.ButtonStyle.danger)
     async def button_close(self, interaction: discord.Interaction, button: discord.ui.Button):

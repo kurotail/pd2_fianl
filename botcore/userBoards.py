@@ -3,6 +3,7 @@ import pickle
 import discord
 from io import BytesIO
 import drawer
+from drawer import Animation
 from botcore import descrip
 from botcore.classes import BoardData
 from localVals import BOARD_DATA_PATH
@@ -64,14 +65,27 @@ def check_ans(userid: int) -> tuple[bool, list[list[bool]]]:
     return (ans_correct, wrong_board)
     
 
-async def get_board_msg(userid: int, log_channel: discord.channel) -> str:
+async def get_board_msg(userid: int, log_channel: discord.channel, check_done: bool = False) -> str:
     board_data = get_user_board(userid)
     board_img = await asyncio.to_thread(drawer.draw_board, board_data)
-    board_img = await asyncio.to_thread(drawer.highlight_board, board_data, board_img)
+    if check_done:
+        correct, wrong_board = check_ans(userid)
+        ani = Animation(board_img)
+        ani.animation_scan(wrong_board)
+        if correct:
+            ani.animation_correct()
+    else:
+        board_img = await asyncio.to_thread(drawer.highlight_board, board_data, board_img)
+        
     with BytesIO() as image_binary:
-        board_img.save(image_binary, 'PNG')
+        if check_done:
+            ani.frames[0].save(image_binary, format='GIF', save_all=True, append_images=ani.frames[1:], duration=33)
+            filename = "board.gif"
+        else:
+            board_img.save(image_binary, format='PNG')
+            filename = "board.png"
         image_binary.seek(0)
-        img_msg = await log_channel.send(file=discord.File(fp=image_binary, filename='board.png'))
+        img_msg = await log_channel.send(file=discord.File(fp=image_binary, filename=filename))
         if board_data.last_image_msgID:
             try:
                 del_img_msg = await log_channel.fetch_message(board_data.last_image_msgID)
