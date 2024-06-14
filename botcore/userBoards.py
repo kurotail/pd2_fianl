@@ -78,9 +78,9 @@ async def get_board_msg(userid: int, log_channel: discord.channel, check_done: b
     if check_done:
         correct, wrong_board = check_ans(userid)
         ani = Animation(board_img)
-        ani.animation_scan(wrong_board)
+        await asyncio.to_thread(ani.animation_scan, wrong_board)
         if correct:
-            ani.animation_correct()
+            await asyncio.to_thread(ani.animation_correct)
     else:
         board_img = await asyncio.to_thread(drawer.highlight_board, board_data, board_img)
         
@@ -100,6 +100,7 @@ async def get_board_msg(userid: int, log_channel: discord.channel, check_done: b
             except:
                 pass
         board_data.last_image_msgID = img_msg.id
+        set_user_board(userid, board_data)
         return (
             f"Difficulty: {descrip.difficulty_list[board_data.difficulty]}\n"+
             f"Selected cell: {board_data.get_cell_num()}\n"+

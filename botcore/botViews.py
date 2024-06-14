@@ -1,20 +1,18 @@
 import discord
-from discord.ext import commands
 from botcore import userBoards
 from botcore.classes import BoardData
 from botcore.botModals import AnswerModal, SelectCellModal
 import time
 
 class SudokuView(discord.ui.View):
-    def __init__(self, ctx: commands.Context, message: discord.message, log_channel: discord.channel):
+    def __init__(self, userid: int, original_interaction: discord.Integration, log_channel: discord.channel):
         super().__init__(timeout = 300)
-        self.message: discord.message = message
+        self.original_interaction: discord.Integration = original_interaction
         self.log_channel: discord.channel = log_channel
-        self.ctx: commands.Context = ctx
-        self.player_id: int = ctx.author.id
-        self.board_data: BoardData = userBoards.get_user_board(self.player_id)
+        self.userid: int = userid
+        self.board_data: BoardData = userBoards.get_user_board(self.userid)
         self.nowid = int(time.time())
-        userBoards.set_user_nowid(self.player_id, self.nowid)
+        userBoards.set_user_nowid(self.userid, self.nowid)
         self.update_btn_state()
     
     def check_all_fill(self) -> bool:
@@ -57,20 +55,19 @@ class SudokuView(discord.ui.View):
             btns["Finish"].disabled = True
     
     async def check_nowid_expired(self) -> bool:
-        if userBoards.get_user_nowid(self.player_id) != self.nowid:
-            await self.message.delete()
-            self.stop()
+        if userBoards.get_user_nowid(self.userid) != self.nowid:
+            await self.del_self()
             return True
         return False
     
-    async def disable_all_items(self):
-        for item in self.children:
-            item.disabled = True
-        await self.message.edit(view=self)
-        self.stop()
-    
     async def on_timeout(self) -> None:
-        await self.message.delete()
+        await self.del_self()
+        
+    async def del_self(self) -> None:
+        try:
+            await self.original_interaction.delete_original_response()
+        except:
+            pass
         self.stop()
     
     @discord.ui.button(label = "🔼", style = discord.ButtonStyle.primary)
@@ -78,10 +75,10 @@ class SudokuView(discord.ui.View):
         if await self.check_nowid_expired():
             return
         self.board_data.move_up()
-        userBoards.set_user_board(self.player_id, self.board_data)
+        userBoards.set_user_board(self.userid, self.board_data)
         self.update_btn_state()
         await interaction.response.edit_message(
-            content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            content = await userBoards.get_board_msg(self.userid, self.log_channel),
             view = self
         )
     
@@ -90,10 +87,10 @@ class SudokuView(discord.ui.View):
         if await self.check_nowid_expired():
             return
         self.board_data.move_down()
-        userBoards.set_user_board(self.player_id, self.board_data)
+        userBoards.set_user_board(self.userid, self.board_data)
         self.update_btn_state()
         await interaction.response.edit_message(
-            content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            content = await userBoards.get_board_msg(self.userid, self.log_channel),
             view = self
         )
     
@@ -102,10 +99,10 @@ class SudokuView(discord.ui.View):
         if await self.check_nowid_expired():
             return
         self.board_data.move_left()
-        userBoards.set_user_board(self.player_id, self.board_data)
+        userBoards.set_user_board(self.userid, self.board_data)
         self.update_btn_state()
         await interaction.response.edit_message(
-            content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            content = await userBoards.get_board_msg(self.userid, self.log_channel),
             view = self
         )
     
@@ -114,10 +111,10 @@ class SudokuView(discord.ui.View):
         if await self.check_nowid_expired():
             return
         self.board_data.move_right()
-        userBoards.set_user_board(self.player_id, self.board_data)
+        userBoards.set_user_board(self.userid, self.board_data)
         self.update_btn_state()
         await interaction.response.edit_message(
-            content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            content = await userBoards.get_board_msg(self.userid, self.log_channel),
             view = self
         )
     
@@ -131,10 +128,10 @@ class SudokuView(discord.ui.View):
         
         if selectModal.cell_num:
             self.board_data.set_pos_cell_num(selectModal.cell_num)
-            userBoards.set_user_board(self.player_id, self.board_data)
+            userBoards.set_user_board(self.userid, self.board_data)
             self.update_btn_state()
-            await self.message.edit(
-                content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            await self.original_interaction.edit_original_response(
+                content = await userBoards.get_board_msg(self.userid, self.log_channel),
                 view = self
             )
     
@@ -148,20 +145,20 @@ class SudokuView(discord.ui.View):
         
         if ansModal.answer_num:
             self.board_data.write_number(ansModal.answer_num)
-            userBoards.set_user_board(self.player_id, self.board_data)
+            userBoards.set_user_board(self.userid, self.board_data)
             self.update_btn_state()
-            edit_content = await userBoards.get_board_msg(self.player_id, self.log_channel)
-            await self.message.edit(content = edit_content, view = self)
+            edit_content = await userBoards.get_board_msg(self.userid, self.log_channel)
+            await self.original_interaction.edit_original_response(content = edit_content, view = self)
 
     @discord.ui.button(label = "Hint", style = discord.ButtonStyle.secondary)
     async def button_hint(self, interaction: discord.Interaction, button: discord.ui.Button):
         if await self.check_nowid_expired():
             return
         self.board_data.set_hint()
-        userBoards.set_user_board(self.player_id, self.board_data)
+        userBoards.set_user_board(self.userid, self.board_data)
         self.update_btn_state()
         await interaction.response.edit_message(
-            content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            content = await userBoards.get_board_msg(self.userid, self.log_channel),
             view = self
         )
         
@@ -170,10 +167,10 @@ class SudokuView(discord.ui.View):
         if await self.check_nowid_expired():
             return
         self.board_data.reset_board()
-        userBoards.set_user_board(self.player_id, self.board_data)
+        userBoards.set_user_board(self.userid, self.board_data)
         self.update_btn_state()
         await interaction.response.edit_message(
-            content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            content = await userBoards.get_board_msg(self.userid, self.log_channel),
             view = self
         )
         
@@ -181,38 +178,41 @@ class SudokuView(discord.ui.View):
     async def button_finish(self, interaction: discord.Interaction, button: discord.ui.Button):
         if await self.check_nowid_expired():
             return
-        if userBoards.check_ans(self.player_id)[0]:
+        if userBoards.check_ans(self.userid)[0]:
             self.board_data.set_finish(True)
-        userBoards.set_user_board(self.player_id, self.board_data)
+        userBoards.set_user_board(self.userid, self.board_data)
         self.update_btn_state()
         await interaction.response.edit_message(content = "正在檢查結果<a:loading_dots:1093174815545888851>", view = self)
-        edit_content = await userBoards.get_board_msg(self.player_id, self.log_channel, True)
-        await self.message.edit(content = edit_content, view = self)
+        edit_content = await userBoards.get_board_msg(self.userid, self.log_channel, True)
+        await self.original_interaction.edit_original_response(content = edit_content, view = self)
 
     @discord.ui.button(label = "Close", style = discord.ButtonStyle.danger)
     async def button_close(self, interaction: discord.Interaction, button: discord.ui.Button):
         if await self.check_nowid_expired():
             return
-        await self.disable_all_items()
-        await self.message.delete()
-        self.stop()
+        await self.del_self()
 
 class ConfirmView(discord.ui.View):
-    def __init__(self, message: discord.message = None):
+    def __init__(self, original_interaction: discord.Integration = None):
         super().__init__(timeout = 10)
         self.value: bool|None = None
-        self.message: discord.message = message
+        self.original_interaction: discord.Integration = original_interaction
     
     async def disable_all_items(self):
         for item in self.children:
             item.disabled = True
-            
-        await self.message.edit(view = self)
+        await self.original_interaction.edit_original_response(view = self)
         self.stop()
     
     async def on_timeout(self) -> None:
-        await self.disable_all_items()
-        await self.message.delete()
+        await self.del_self()
+    
+    async def del_self(self) -> None:
+        try:
+            await self.original_interaction.delete_original_response()
+        except:
+            pass
+        self.stop()
         
     @discord.ui.button(label = "Yes", style = discord.ButtonStyle.success)
     async def button_yes(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -228,6 +228,4 @@ class ConfirmView(discord.ui.View):
     
     @discord.ui.button(label = "Cancel", style = discord.ButtonStyle.secondary)
     async def button_cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.disable_all_items()
-        await self.message.delete()
-        self.stop()
+        await self.del_self()

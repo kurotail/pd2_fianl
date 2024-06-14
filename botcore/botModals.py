@@ -1,5 +1,4 @@
 import discord
-import asyncio
 
 class AnswerModal(discord.ui.Modal):
     def __init__(self, title: str) -> None:
@@ -22,13 +21,11 @@ class AnswerModal(discord.ui.Modal):
             self.status = "請輸入整數 (1~9)"
         
         if self.status != "":
-            await interaction.response.send_message(self.status, ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
         else:
             self.answer_num = num
-            await interaction.response.send_message("作答完成", ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
         self.stop()
-        await asyncio.sleep(3)
-        await interaction.delete_original_response()
         
 class SelectCellModal(discord.ui.Modal):
     def __init__(self) -> None:
@@ -51,10 +48,8 @@ class SelectCellModal(discord.ui.Modal):
             self.status = "請輸入整數 (1~81)"
         
         if self.status != "":
-            await interaction.response.send_message(self.status, ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
         else:
             self.cell_num = num
-            await interaction.response.send_message("選擇完成", ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
         self.stop()
-        await asyncio.sleep(3)
-        await interaction.delete_original_response()
