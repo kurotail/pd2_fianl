@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 #Customized 
-# board_data.pickle
+board_data.pickle
 chromedriver.exe
 .util/
 assets/ani/correct_ani.pickle
