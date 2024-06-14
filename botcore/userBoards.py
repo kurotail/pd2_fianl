@@ -9,6 +9,7 @@ from botcore.classes import BoardData
 from localVals import BOARD_DATA_PATH
 import asyncio
 
+user_nowid = {}
 user_datas = {}
 if os.path.isfile(BOARD_DATA_PATH):
     with open(BOARD_DATA_PATH, 'rb') as f:
@@ -18,6 +19,12 @@ def have_board(userid: int) -> bool:
     if user_datas.get(str(userid)):
         return True
     return False
+
+def set_user_nowid(userid: int, nowid: int) -> None:
+    user_nowid[userid] = nowid
+    
+def get_user_nowid(userid: int) -> int:
+    return user_nowid.get(userid)
 
 def set_user_board(userid: int, board_data: BoardData) -> None:
     user_datas[str(userid)] = board_data
@@ -31,7 +38,7 @@ def delete_board(userid: int) -> None:
     user_datas.pop(str(userid), None)
     with open(BOARD_DATA_PATH, 'wb') as f:
         pickle.dump(user_datas, f)
-        
+
 def new_board(userid: int, board: list[list[int]], ans_board: list[list[int]], difficulty: int) -> None:
     board_data = {
         "board": board,
