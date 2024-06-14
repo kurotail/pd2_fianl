@@ -12,13 +12,28 @@ class SudokuView(discord.ui.View):
         self.ctx: commands.Context = ctx
         self.player_id: int = ctx.author.id
         self.board_data: BoardData = userBoards.get_user_board(self.player_id)
-        self.btn_boundary_state()
-        
-    def btn_boundary_state(self) -> None:
+        self.update_btn_state()
+    
+    def check_all_fill(self) -> bool:
+        board = self.board_data.board
+        user_ans_board = self.board_data.user_ans_board
+        for y in range(9):
+            for x in range(9):
+                if board[y][x] + user_ans_board[y][x] == 0:
+                    return False
+        return True
+    
+    def update_btn_state(self) -> None:
         btns = {}
-        for item in self.children:
-            btns[item.label] = item
-            item.disabled = False
+        if self.board_data.is_finish:
+            for item in self.children:
+                if item.label != "Close":
+                    item.disabled = True
+            return
+        else:
+            for item in self.children:
+                btns[item.label] = item
+                item.disabled = False
 
         if self.board_data.y == 0:
             btns['🔼'].disabled = True
@@ -35,6 +50,9 @@ class SudokuView(discord.ui.View):
             btns["Write"].disabled = True
             btns["Hint"].disabled = True
         
+        if self.check_all_fill() == False:
+            btns["Finish"].disabled = True
+        
     async def disable_all_items(self):
         for item in self.children:
             item.disabled = True
@@ -47,9 +65,9 @@ class SudokuView(discord.ui.View):
 
     @discord.ui.button(label = "🔼", style = discord.ButtonStyle.primary)
     async def button_up(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.board_data.y -= 1
+        self.board_data.move_up()
         userBoards.set_user_board(self.player_id, self.board_data)
-        self.btn_boundary_state()
+        self.update_btn_state()
         await interaction.response.edit_message(
             content = await userBoards.get_board_msg(self.player_id, self.log_channel),
             view = self
@@ -57,9 +75,9 @@ class SudokuView(discord.ui.View):
     
     @discord.ui.button(label = "🔽", style = discord.ButtonStyle.primary)
     async def button_down(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.board_data.y += 1
+        self.board_data.move_down()
         userBoards.set_user_board(self.player_id, self.board_data)
-        self.btn_boundary_state()
+        self.update_btn_state()
         await interaction.response.edit_message(
             content = await userBoards.get_board_msg(self.player_id, self.log_channel),
             view = self
@@ -67,9 +85,9 @@ class SudokuView(discord.ui.View):
     
     @discord.ui.button(label = "◀️", style = discord.ButtonStyle.primary)
     async def button_left(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.board_data.x -= 1
+        self.board_data.move_left()
         userBoards.set_user_board(self.player_id, self.board_data)
-        self.btn_boundary_state()
+        self.update_btn_state()
         await interaction.response.edit_message(
             content = await userBoards.get_board_msg(self.player_id, self.log_channel),
             view = self
@@ -77,9 +95,9 @@ class SudokuView(discord.ui.View):
     
     @discord.ui.button(label = "▶️", style = discord.ButtonStyle.primary)
     async def button_right(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.board_data.x += 1
+        self.board_data.move_right()
         userBoards.set_user_board(self.player_id, self.board_data)
-        self.btn_boundary_state()
+        self.update_btn_state()
         await interaction.response.edit_message(
             content = await userBoards.get_board_msg(self.player_id, self.log_channel),
             view = self
@@ -87,18 +105,14 @@ class SudokuView(discord.ui.View):
     
     @discord.ui.button(label = "Select", style = discord.ButtonStyle.primary)
     async def button_select(self, interaction: discord.Interaction, button: discord.ui.Button):
-        x = self.board_data.x
-        y = self.board_data.y
         selectModal = SelectCellModal()
         await interaction.response.send_modal(selectModal)
         await selectModal.wait()
         
         if selectModal.cell_num:
-            x, y = userBoards.get_cell_pos(selectModal.cell_num)
-            self.board_data.x = x
-            self.board_data.y = y
+            self.board_data.set_pos_cell_num(selectModal.cell_num)
             userBoards.set_user_board(self.player_id, self.board_data)
-            self.btn_boundary_state()
+            self.update_btn_state()
             await self.message.edit(
                 content = await userBoards.get_board_msg(self.player_id, self.log_channel),
                 view = self
@@ -106,29 +120,48 @@ class SudokuView(discord.ui.View):
     
     @discord.ui.button(label = "Write", style = discord.ButtonStyle.secondary)
     async def button_write(self, interaction: discord.Interaction, button: discord.ui.Button):
-        x = self.board_data.x
-        y = self.board_data.y
-        ansModal = AnswerModal(f"填寫答案 (Cell: {userBoards.get_cell_num(x, y)})")
+        ansModal = AnswerModal(f"填寫答案 (Cell: {self.board_data.get_cell_num()})")
         await interaction.response.send_modal(ansModal)
         await ansModal.wait()
         
         if ansModal.answer_num:
-            self.board_data.hint_board[y][x] = 0
-            self.board_data.user_ans_board[y][x] = ansModal.answer_num
+            self.board_data.write_number(ansModal.answer_num)
             userBoards.set_user_board(self.player_id, self.board_data)
+            self.update_btn_state()
             edit_content = await userBoards.get_board_msg(self.player_id, self.log_channel)
-            await self.message.edit(content = edit_content)
+            await self.message.edit(content = edit_content, view = self)
 
     @discord.ui.button(label = "Hint", style = discord.ButtonStyle.secondary)
     async def button_hint(self, interaction: discord.Interaction, button: discord.ui.Button):
-        x = self.board_data.x
-        y = self.board_data.y
-        self.board_data.user_ans_board[y][x] = 0
-        self.board_data.hint_board[y][x] = self.board_data.ans_board[y][x]
+        self.board_data.set_hint()
         userBoards.set_user_board(self.player_id, self.board_data)
-        self.btn_boundary_state()
+        self.update_btn_state()
         await interaction.response.edit_message(
             content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            view = self
+        )
+        
+    @discord.ui.button(label = "Reset", style = discord.ButtonStyle.secondary)
+    async def button_reset(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.board_data.reset_board()
+        userBoards.set_user_board(self.player_id, self.board_data)
+        self.update_btn_state()
+        await interaction.response.edit_message(
+            content = await userBoards.get_board_msg(self.player_id, self.log_channel),
+            view = self
+        )
+        
+    @discord.ui.button(label = "Finish", style = discord.ButtonStyle.success)
+    async def button_finish(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if userBoards.check_ans(self.player_id)[0]:
+            self.board_data.set_finish(True)
+            ans_result = "答案正確!\n"
+        else:
+            ans_result = "答案錯誤!\n"
+        userBoards.set_user_board(self.player_id, self.board_data)
+        self.update_btn_state()
+        await interaction.response.edit_message(
+            content = ans_result + await userBoards.get_board_msg(self.player_id, self.log_channel),
             view = self
         )
 

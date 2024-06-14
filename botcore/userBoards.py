@@ -43,11 +43,26 @@ def new_board(userid: int, board: list[list[int]], ans_board: list[list[int]], d
     }
     set_user_board(userid, BoardData(board_data))
 
-def get_cell_num(x: int, y: int) -> int:
-    return y*9 + x + 1
-
-def get_cell_pos(cell_num: int) -> tuple:
-    return ((cell_num-1) % 9, (cell_num-1) // 9)
+def check_ans(userid: int) -> tuple[bool, list[list[bool]]]:
+    """
+    Return a tuple(bool, list[list[int]])
+    [0]: whether the answer is correct.
+    [1]: 2D-list marking the positions with incorrect answers as True.
+    """
+    board_data = get_user_board(userid)
+    ans_correct = True
+    wrong_board = [[False]*9 for i in range(9)]
+    user_ans_board = board_data.user_ans_board
+    ans_board = board_data.ans_board
+    board = board_data.board
+    for y in range(9):
+        for x in range(9):
+            if user_ans_board[y][x] != ans_board[y][x] and board[y][x] == 0:
+                wrong_board[y][x] = True
+                ans_correct = False
+    
+    return (ans_correct, wrong_board)
+    
 
 async def get_board_msg(userid: int, log_channel: discord.channel) -> str:
     board_data = get_user_board(userid)
@@ -58,11 +73,14 @@ async def get_board_msg(userid: int, log_channel: discord.channel) -> str:
         image_binary.seek(0)
         img_msg = await log_channel.send(file=discord.File(fp=image_binary, filename='board.png'))
         if board_data.last_image_msgID:
-            del_img_msg = await log_channel.fetch_message(board_data.last_image_msgID)
-            await del_img_msg.delete()
+            try:
+                del_img_msg = await log_channel.fetch_message(board_data.last_image_msgID)
+                await del_img_msg.delete()
+            except:
+                pass
         board_data.last_image_msgID = img_msg.id
         return (
             f"Difficulty: {descrip.difficulty_list[board_data.difficulty]}\n"+
-            f"Selected cell: {get_cell_num(board_data.x, board_data.y)}\n"+
+            f"Selected cell: {board_data.get_cell_num()}\n"+
             img_msg.attachments[0].url
         )

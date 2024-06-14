@@ -49,6 +49,30 @@ class Bot(commands.Bot):
 bot = Bot()
 sudoku_crawler = SudokuCrawler()
 
+@bot.hybrid_command(name="cheat", with_app_command=True, description=descrip.cheat)
+@commands.cooldown(1, 10, commands.BucketType.user)
+@app_commands.guilds(discord.Object(id = GUILD_ID))
+async def cheat(ctx: commands.Context) -> None:
+    await ctx.defer(ephemeral = True)
+    reply_msg = await ctx.reply("正在讀取資料 <a:loading_dots:1093174815545888851>")
+    log_channel = bot.get_channel(1250654346861875200)
+    
+    if userBoards.have_board(ctx.author.id) == False:
+        await reply_msg.edit(content = "您沒有遊戲紀錄，請使用 /new_sudoku 來開啟新遊戲")
+        return
+    
+    board_data = userBoards.get_user_board(ctx.author.id)
+    for y in range(9):
+        for x in range(9):
+            if board_data.board[y][x] == 0:
+                board_data.user_ans_board[y][x] = board_data.ans_board[y][x]
+    userBoards.set_user_board(ctx.author.id, board_data)
+    
+    await reply_msg.edit(
+        content = await userBoards.get_board_msg(ctx.author.id, log_channel),
+        view = SudokuView(ctx, reply_msg, log_channel)
+    )
+
 @bot.hybrid_command(name="start_sudoku", with_app_command=True, description=descrip.start_sudoku)
 @commands.cooldown(1, 10, commands.BucketType.user)
 @app_commands.guilds(discord.Object(id = GUILD_ID))
