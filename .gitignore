@@ -130,3 +130,6 @@ dmypy.json
 
 #Customized 
 chromedriver.exe
+.util/
+assets/ani/correct_ani.pickle
+temp/

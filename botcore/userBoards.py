@@ -2,7 +2,7 @@ import os
 import pickle
 import discord
 from io import BytesIO
-from sudoku import drawer
+import drawer
 from botcore import descrip
 from botcore.classes import BoardData
 from localVals import BOARD_DATA_PATH

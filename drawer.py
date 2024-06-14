@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from botcore.classes import BoardData
+import os, localVals, pickle
 
 BG_COLOR = "#232428"
 GRIDBG_COLOR = ["#383A40", "#2E3035"]
@@ -15,6 +16,8 @@ HIGHLIGHT_COLOR = [
 
 IMGSIZE = (500, 500)
 MARGIN = 10
+CORRECT_ANI_SIZE = (370, 370)
+CORRECT_ANI_OFFSET = (170, 170)
 
 GRID_SIZE = IMGSIZE[0] - 2 * MARGIN
 CELL_SIZE = GRID_SIZE // 9
@@ -78,6 +81,38 @@ def draw_board(board_data: BoardData) -> Image:
                 draw.text((text_x+1, text_y-3), number, fill=HINT_COLOR, font=font)
 
     return image
+
+def drawCorrectAni(main_image: Image.Image) -> list[Image.Image]:
+    """
+    Draw a animation with a sign on the right-bottom corner.
+    Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
+    Note that it is designed basing on 30fps.
+    """
+    
+    # Create a transparent layer with the same size as the main image
+    main_image = main_image.convert("RGBA")
+    background = Image.new('RGBA', main_image.size, (0, 0, 0, 0))
+    # Load and resize the images
+    resized_images: list[Image.Image] = []
+    gif = Image.open(localVals.CORRECT_ANI_PATH)
+    try:
+        while True:
+            gif.seek(gif.tell() + 1)
+            frame = gif.copy()
+            resized_image: Image.Image = background.copy()
+            resized_image.paste(frame.resize(CORRECT_ANI_SIZE), CORRECT_ANI_OFFSET)
+            resized_images.append(resized_image)
+    except EOFError:
+        pass
+
+
+    # Create a list to hold the modified images
+    modified_images = []
+    
+    for img in resized_images:
+        modified_images.append(Image.alpha_composite(main_image, img))
+    
+    return modified_images
 
 def highlight_board(board_data: BoardData, image:Image) -> Image:
     board = board_data.board
@@ -150,3 +185,19 @@ def highlight_board(board_data: BoardData, image:Image) -> Image:
     image = Image.alpha_composite(image, mask)
 
     return image
+
+if __name__ == "__main__":
+    output_path = "./temp/correct.gif"
+    duration = 66
+
+    board = [[9, 0, 0, 0, 0, 0, 0, 0, 2], [0, 0, 3, 7, 0, 9, 8, 0, 0], [0, 0, 4, 3, 6, 0, 1, 0, 0], [1, 0, 6, 0, 0, 0, 2, 0, 8], [0, 0, 9, 0, 4, 0, 7, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 7, 1, 3, 0, 6, 0, 0], [0, 0, 2, 6, 0, 5, 9, 0, 0], [3, 0, 0, 0, 0, 0, 0, 0, 7]]
+    board_data = {
+        "board": board,
+        "user_ans_board": [[0]*9 for i in range(9)],
+        "hint_board": [[0]*9 for i in range(9)],
+        "x": 0,
+        "y": 0
+    }
+    board_img = draw_board(BoardData(board_data))
+    images = drawCorrectAni(board_img)
+    images[0].save(output_path, save_all=True, append_images=images[1:], duration=duration)
