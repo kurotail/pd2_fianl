@@ -30,7 +30,7 @@ def draw_cell(main_image: Image.Image, cell_pos: tuple[int, int], color: tuple[f
     """
     Draw a single cell with ```color``` in ```cell_pos```.
     Note that ```color``` should follow RGBA format.
-    :param cell_pos: the position of the cell, ([0-9], [0-9])
+    :param cell_pos: the position of the cell, (x=[0-9], y=[0-9])
     :param color: the color pars to Image.new(color=color)
     """
     cell_cover: Image.Image = Image.new("RGBA", (CELL_SIZE-3, CELL_SIZE-3), color)
@@ -258,7 +258,7 @@ class Animation:
                     cell_color = COLOR_INCORRECT
                 else:
                     cell_color = COLOR_CORRECT
-                base_image = draw_cell(base_image, (y, x), cell_color)
+                base_image = draw_cell(base_image, (x, y), cell_color)
             
             modified_images.append(base_image)
 
