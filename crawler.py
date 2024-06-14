@@ -24,7 +24,7 @@ class SudokuCrawler():
     def __del__(self) -> None:
         self.chrome.quit()
     
-    async def crawlBoard(self, difficulty:int) -> list:
+    async def crawlBoard(self, difficulty:int) -> list[list[int]]:
         """
         difficulty:0 -> Easy,
         difficulty:1 -> Medium,

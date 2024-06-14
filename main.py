@@ -117,7 +117,7 @@ async def new_sudoku(ctx: commands.Context, difficulty:int) -> None:
         if len(ans.ans) == 1:
             break
         
-    userBoards.new_board(ctx.author.id, board, ans.ans, difficulty)
+    userBoards.new_board(ctx.author.id, board, ans.ans[0], difficulty)
     await reply_msg.edit(
         content = await userBoards.get_board_msg(ctx.author.id, log_channel),
         view = SudokuView(ctx, reply_msg, log_channel)

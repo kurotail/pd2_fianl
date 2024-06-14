@@ -7,10 +7,11 @@ class Cog_Extension(commands.Cog):
 
 class BoardData():
     def __init__(self, board_data: dict) -> None:
-        self.board = board_data.get("board")
-        self.user_ans_board = board_data.get("user_ans_board")
-        self.hint_board = board_data.get("hint_board")
-        self.ans_board = board_data.get("ans_board")
-        self.difficulty = board_data.get("difficulty")
-        self.x = board_data.get("x")
-        self.y = board_data.get("y")
+        self.last_image_msgID: int = None
+        self.board: list[list[int]] = board_data.get("board")
+        self.user_ans_board: list[list[int]] = board_data.get("user_ans_board")
+        self.hint_board: list[list[int]] = board_data.get("hint_board")
+        self.ans_board: list[list[int]] = board_data.get("ans_board")
+        self.difficulty: int = board_data.get("difficulty")
+        self.x: int = board_data.get("x")
+        self.y: int = board_data.get("y")

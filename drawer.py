@@ -23,7 +23,7 @@ CORRECT_ANI_OFFSET_INIT = (170, 530)
 GRID_SIZE = IMGSIZE[0] - 2 * MARGIN
 CELL_SIZE = GRID_SIZE // 9
 
-def draw_board(board_data: BoardData) -> Image:
+def draw_board(board_data: BoardData) -> Image.Image:
     board = board_data.board
     user_ans_board = board_data.user_ans_board
     hint_board = board_data.hint_board
@@ -83,7 +83,7 @@ def draw_board(board_data: BoardData) -> Image:
 
     return image
 
-def drawCorrectAni(main_image: Image.Image) -> list[Image.Image]:
+def draw_anime_correct(main_image: Image.Image) -> list[Image.Image]:
     """
     Draw a animation with a sign on the right-bottom corner based on main_image.
     Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
@@ -113,11 +113,18 @@ def drawCorrectAni(main_image: Image.Image) -> list[Image.Image]:
                 offset_1 += int((CORRECT_ANI_OFFSET[1] - CORRECT_ANI_OFFSET_INIT[1]) / 5)
     except EOFError:
         pass
-
-
+    
     # Create a list to hold the modified images
     modified_images = []
     
+    scan_frames = 30  # Number of frames for the scanning animation
+    for i in range(scan_frames):
+        mask = Image.new("RGBA", IMGSIZE, color=(0, 0, 0, 0))
+        draw = ImageDraw.Draw(mask, 'RGBA')
+        scan_width = int((i + 1) * (main_image.width / scan_frames))
+        draw.rectangle([0, 0, scan_width, main_image.height], fill=(0, 255, 0, 127))
+        modified_images.append(Image.alpha_composite(main_image, mask))
+
     for img in resized_images:
         modified_images.append(Image.alpha_composite(main_image, img))
     
@@ -208,5 +215,5 @@ if __name__ == "__main__":
         "y": 0
     }
     board_img = draw_board(BoardData(board_data))
-    images = drawCorrectAni(board_img)
+    images = draw_anime_correct(board_img)
     images[0].save(output_path, save_all=True, append_images=images[1:], duration=duration)

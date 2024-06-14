@@ -124,7 +124,7 @@ class SudokuView(discord.ui.View):
         x = self.board_data.x
         y = self.board_data.y
         self.board_data.user_ans_board[y][x] = 0
-        self.board_data.hint_board[y][x] = self.board_data.ans_board[0][y][x]
+        self.board_data.hint_board[y][x] = self.board_data.ans_board[y][x]
         userBoards.set_user_board(self.player_id, self.board_data)
         self.btn_boundary_state()
         await interaction.response.edit_message(

@@ -31,7 +31,7 @@ def delete_board(userid: int) -> None:
     with open(BOARD_DATA_PATH, 'wb') as f:
         pickle.dump(user_datas, f)
         
-def new_board(userid: int, board: list, ans_board: list, difficulty: int) -> None:
+def new_board(userid: int, board: list[list[int]], ans_board: list[list[int]], difficulty: int) -> None:
     board_data = {
         "board": board,
         "user_ans_board": [[0]*9 for i in range(9)],
@@ -57,6 +57,10 @@ async def get_board_msg(userid: int, log_channel: discord.channel) -> str:
         board_img.save(image_binary, 'PNG')
         image_binary.seek(0)
         img_msg = await log_channel.send(file=discord.File(fp=image_binary, filename='board.png'))
+        if board_data.last_image_msgID:
+            del_img_msg = await log_channel.fetch_message(board_data.last_image_msgID)
+            await del_img_msg.delete()
+        board_data.last_image_msgID = img_msg.id
         return (
             f"Difficulty: {descrip.difficulty_list[board_data.difficulty]}\n"+
             f"Selected cell: {get_cell_num(board_data.x, board_data.y)}\n"+
