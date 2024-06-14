@@ -102,7 +102,6 @@ def drawCorrectAni(main_image: Image.Image) -> list[Image.Image]:
     try:
         while True:
             offset = (offset_0, offset_1)
-            print(offset)
             gif.seek(gif.tell() + 1)
             frame = gif.copy()
             resized_image: Image.Image = background.copy()
