@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from botcore.classes import BoardData
-import os, localVals, pickle
+import localVals
 
 BG_COLOR = "#232428"
 GRIDBG_COLOR = ["#383A40", "#2E3035"]
@@ -18,6 +18,7 @@ IMGSIZE = (500, 500)
 MARGIN = 10
 CORRECT_ANI_SIZE = (370, 370)
 CORRECT_ANI_OFFSET = (170, 170)
+CORRECT_ANI_OFFSET_INIT = (170, 530)
 
 GRID_SIZE = IMGSIZE[0] - 2 * MARGIN
 CELL_SIZE = GRID_SIZE // 9
@@ -84,9 +85,10 @@ def draw_board(board_data: BoardData) -> Image:
 
 def drawCorrectAni(main_image: Image.Image) -> list[Image.Image]:
     """
-    Draw a animation with a sign on the right-bottom corner.
+    Draw a animation with a sign on the right-bottom corner based on main_image.
     Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
     Note that it is designed basing on 30fps.
+    :param main_image: the animation is based on main_image, which should be a solved game board.
     """
     
     # Create a transparent layer with the same size as the main image
@@ -95,13 +97,21 @@ def drawCorrectAni(main_image: Image.Image) -> list[Image.Image]:
     # Load and resize the images
     resized_images: list[Image.Image] = []
     gif = Image.open(localVals.CORRECT_ANI_PATH)
+    offset_0 = CORRECT_ANI_OFFSET_INIT[0]
+    offset_1 = CORRECT_ANI_OFFSET_INIT[1]
     try:
         while True:
+            offset = (offset_0, offset_1)
+            print(offset)
             gif.seek(gif.tell() + 1)
             frame = gif.copy()
             resized_image: Image.Image = background.copy()
-            resized_image.paste(frame.resize(CORRECT_ANI_SIZE), CORRECT_ANI_OFFSET)
+            resized_image.paste(frame.resize(CORRECT_ANI_SIZE), offset)
             resized_images.append(resized_image)
+            if abs(offset_0 - CORRECT_ANI_OFFSET[0]) > 10:
+                offset_0 += int((CORRECT_ANI_OFFSET[0] - CORRECT_ANI_OFFSET_INIT[0]) / 5)
+            if abs(offset_1 - CORRECT_ANI_OFFSET[1]) > 10:
+                offset_1 += int((CORRECT_ANI_OFFSET[1] - CORRECT_ANI_OFFSET_INIT[1]) / 5)
     except EOFError:
         pass
 
