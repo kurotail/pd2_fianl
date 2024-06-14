@@ -20,8 +20,28 @@ CORRECT_ANI_SIZE = (370, 370)
 CORRECT_ANI_OFFSET = (170, 170)
 CORRECT_ANI_OFFSET_INIT = (170, 530)
 
+COLOR_CORRECT = (138, 227, 169, 100)
+COLOR_INCORRECT = (189, 69, 62, 100)
+
 GRID_SIZE = IMGSIZE[0] - 2 * MARGIN
 CELL_SIZE = GRID_SIZE // 9
+
+def draw_cell(main_image: Image.Image, cell_pos: tuple[int, int], color: tuple[float, float, float, float]) -> Image.Image:
+    """
+    Draw a single cell with ```color``` in ```cell_pos```.
+    Note that ```color``` should follow RGBA format.
+    :param cell_pos: the position of the cell, ([0-9], [0-9])
+    :param color: the color pars to Image.new(color=color)
+    """
+    cell_cover: Image.Image = Image.new("RGBA", (CELL_SIZE-3, CELL_SIZE-3), color)
+    background: Image.Image = Image.new('RGBA', main_image.size, (0, 0, 0, 0))
+
+    offset_0: int = cell_pos[0]*CELL_SIZE + MARGIN + 2
+    offset_1: int = cell_pos[1]*CELL_SIZE + MARGIN + 2
+
+    background.paste(cell_cover, (offset_0, offset_1))
+
+    return Image.alpha_composite(main_image, background)
 
 def draw_board(board_data: BoardData) -> Image.Image:
     board = board_data.board
@@ -152,67 +172,101 @@ def highlight_board(board_data: BoardData, image:Image) -> Image.Image:
         
     return Image.alpha_composite(image, mask)
 
-def animation_correct(main_image: Image.Image) -> list[Image.Image]:
+class Animation:
     """
-    Draw a animation with a sign on the right-bottom corner based on main_image.
-    Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
-    Note that it is designed basing on 30fps.
-    :param main_image: the animation is based on main_image, which should be a solved game board.
+    Concate the images in a list.
     """
     
-    # Create a transparent layer with the same size as the main image
-    main_image = main_image.convert("RGBA")
-    background = Image.new('RGBA', main_image.size, (0, 0, 0, 0))
-    # Load and resize the images
-    resized_images: list[Image.Image] = []
-    gif = Image.open(localVals.CORRECT_ANI_PATH)
-    offset_0 = CORRECT_ANI_OFFSET_INIT[0]
-    offset_1 = CORRECT_ANI_OFFSET_INIT[1]
-    try:
-        while True:
-            offset = (offset_0, offset_1)
-            gif.seek(gif.tell() + 1)
-            frame = gif.copy()
-            resized_image: Image.Image = background.copy()
-            resized_image.paste(frame.resize(CORRECT_ANI_SIZE), offset)
-            resized_images.append(resized_image)
-            if abs(offset_0 - CORRECT_ANI_OFFSET[0]) > 10:
-                offset_0 += int((CORRECT_ANI_OFFSET[0] - CORRECT_ANI_OFFSET_INIT[0]) / 5)
-            if abs(offset_1 - CORRECT_ANI_OFFSET[1]) > 10:
-                offset_1 += int((CORRECT_ANI_OFFSET[1] - CORRECT_ANI_OFFSET_INIT[1]) / 5)
-    except EOFError:
-        pass
-    
-    # Create a list to hold the modified images
-    modified_images = []
-    
-    #TODO
-    # width, height = main_image.size
-    # cells_x = width // CELL_SIZE
-    # cells_y = height // CELL_SIZE
+    frames: list[Image.Image]
 
-    # for y in range(cells_y):
-    #     for x in range(cells_x):
-    #         scan_img = main_image.copy()
-    #         draw = ImageDraw.Draw(scan_img)
-    #         draw.rectangle([MARGIN + x*CELL_SIZE, MARGIN + y*CELL_SIZE, (x+1)*CELL_SIZE, (y+1)*CELL_SIZE], fill=(0, 255, 0, 127))
-    #         modified_images.append(scan_img)
+    def __init__(self) -> None:
+        self.frames = []
 
-    for img in resized_images:
-        modified_images.append(Image.alpha_composite(main_image, img))
-    
-    return modified_images
+    def animation_correct(self, main_image: Image.Image) -> list[Image.Image]:
+        """
+        Draw a animation with a sign on the right-bottom corner based on main_image.
+        Return a list of ```Image``` illustrating the scene of finished a game base on the image of the end.
+        Note that it is designed basing on 30fps.
+        :param main_image: the animation is based on main_image, which should be a solved game board.
+        """
 
-def animation_scan() -> Image.Image:
-    raise NotImplementedError
-    #TODO
-    # scan_frames = 30  # Number of frames for the scanning animation
-    # for i in range(scan_frames):
-    #     mask = Image.new("RGBA", IMGSIZE, color=(0, 0, 0, 0))
-    #     draw = ImageDraw.Draw(mask, 'RGBA')
-    #     scan_width = int((i + 1) * (main_image.width / scan_frames))
-    #     draw.rectangle([0, 0, scan_width, main_image.height], fill=(0, 255, 0, 127))
-    #     modified_images.append(Image.alpha_composite(main_image, mask))
+        # Create a transparent layer with the same size as the main image
+        main_image = main_image.convert("RGBA")
+        background = Image.new('RGBA', main_image.size, (0, 0, 0, 0))
+        # Load and resize the images
+        resized_images: list[Image.Image] = []
+        gif = Image.open(localVals.CORRECT_ANI_PATH)
+        offset_0 = CORRECT_ANI_OFFSET_INIT[0]
+        offset_1 = CORRECT_ANI_OFFSET_INIT[1]
+        try:
+            while True:
+                offset = (offset_0, offset_1)
+                gif.seek(gif.tell() + 1)
+                frame = gif.copy()
+                resized_image: Image.Image = background.copy()
+                resized_image.paste(frame.resize(CORRECT_ANI_SIZE), offset)
+                resized_images.append(resized_image)
+                if abs(offset_0 - CORRECT_ANI_OFFSET[0]) > 10:
+                    offset_0 += int((CORRECT_ANI_OFFSET[0] - CORRECT_ANI_OFFSET_INIT[0]) / 5)
+                if abs(offset_1 - CORRECT_ANI_OFFSET[1]) > 10:
+                    offset_1 += int((CORRECT_ANI_OFFSET[1] - CORRECT_ANI_OFFSET_INIT[1]) / 5)
+        except EOFError:
+            pass
+        
+        # Create a list to hold the modified images
+        modified_images = []
+
+        #TODO
+        # width, height = main_image.size
+        # cells_x = width // CELL_SIZE
+        # cells_y = height // CELL_SIZE
+
+        # for y in range(cells_y):
+        #     for x in range(cells_x):
+        #         scan_img = main_image.copy()
+        #         draw = ImageDraw.Draw(scan_img)
+        #         draw.rectangle([MARGIN + x*CELL_SIZE, MARGIN + y*CELL_SIZE, (x+1)*CELL_SIZE, (y+1)*CELL_SIZE], fill=(0, 255, 0, 127))
+        #         modified_images.append(scan_img)
+
+        for img in resized_images:
+            modified_images.append(Image.alpha_composite(main_image, img))
+
+        self.frames += modified_images
+        return modified_images
+
+    def animation_scan(self, main_image: Image.Image, bool_array: list[list[bool]]) -> list[Image.Image]:
+        """
+        Draw a animation of scanning from left-top to right-bottom based on main_image.
+        Return a list of ```Image``` illustrating the scene of scanning the game board.
+        Note that it is designed basing on 30fps.
+        :param main_image: the animation is based on main_image, which should be a solved game board.
+        :param bool_array: this method depend on it to draw the color of cell, which is ```bool_array[y][x]?RED:GREEN```.
+        """
+
+        base_image: Image.Image = main_image.copy()
+        modified_images: list[Image.Image] = [base_image]
+
+        #diagnal line: y + x = i for i = 0, 1, ..., 16
+        for i in range(17):
+            y: int = 0
+            #draw diagnal line
+            for x in range(i + 1):
+                y = i - x
+                if (x > 8) | (y > 8) | (x < 0) | (y < 0):
+                    continue
+                if bool_array[y][x]:
+                    cell_color = COLOR_INCORRECT
+                else:
+                    cell_color = COLOR_CORRECT
+                base_image = draw_cell(base_image, (y, x), cell_color)
+            
+            modified_images.append(base_image)
+
+        self.frames += modified_images
+        return modified_images
+
+    def get(self, index: int) -> Image.Image:
+        return self.frames[index]
 
 if __name__ == "__main__":
     output_path = "./temp/correct.gif"
@@ -226,6 +280,19 @@ if __name__ == "__main__":
         "x": 0,
         "y": 0
     }
+    bool_array = [
+        [True,  True,  True,  True,  False, False, True,  True,  True],
+        [False, True,  True,  True,  False, True,  False, False, True],
+        [True,  False, True,  True,  False, True,  True,  True,  True],
+        [True,  True,  True,  False, False, True,  False, True,  True],
+        [True,  False, False, False, True,  False, True,  True,  True],
+        [False, False, True,  True,  False, True,  False, True,  True],
+        [True,  True,  True,  True,  True,  False, False, False, True],
+        [False, True,  True,  True,  False, False, False, False, True],
+        [True,  True,  True,  False, False, True,  False, False, True]
+    ]
     board_img = draw_board(BoardData(board_data))
-    images = animation_correct(board_img)
-    images[0].save(output_path, save_all=True, append_images=images[1:], duration=duration)
+    ani = Animation()
+    ani.animation_scan(board_img, bool_array)
+    ani.animation_correct(ani.get(-1))
+    ani.frames[0].save(output_path, save_all=True, append_images=ani.frames[1:], duration=duration)
