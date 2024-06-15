@@ -7,8 +7,8 @@ class Cog_Extension(commands.Cog):
 
 class BoardData():
     def __init__(self, board_data: dict) -> None:
-        self.last_image_msgID: int = None
         self.is_finish = False
+        self.last_image_msgID: int = board_data.get("last_image_msgID")
         self.board: list[list[int]] = board_data.get("board")
         self.user_ans_board: list[list[int]] = board_data.get("user_ans_board")
         self.hint_board: list[list[int]] = board_data.get("hint_board")

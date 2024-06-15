@@ -91,7 +91,7 @@ async def new_sudoku(interaction: discord.Integration, difficulty: int) -> None:
     await interaction.response.defer(ephemeral=True)
     await interaction.edit_original_response(content="正在爬取題目 <a:loading_dots:1093174815545888851>")
     log_channel = bot.get_channel(1250654346861875200)
-    
+    last_board_img = None
     if userBoards.have_board(interaction.user.id):
         
         confirm_view = ConfirmView(interaction)
@@ -120,6 +120,8 @@ async def new_sudoku(interaction: discord.Integration, difficulty: int) -> None:
         if confirm_view.value != True: #按下取消或不繼續上次遊戲
             await interaction.delete_original_response()
             return
+
+        last_board_img = userBoards.get_user_board(interaction.user.id).last_image_msgID
     
     while True:
         await interaction.edit_original_response(content="正在爬取題目 <a:loading_dots:1093174815545888851>")
@@ -134,8 +136,8 @@ async def new_sudoku(interaction: discord.Integration, difficulty: int) -> None:
         await asyncio.to_thread(ans.prettify)
         if len(ans.ans) == 1:
             break
-        
-    userBoards.new_board(interaction.user.id, board, ans.ans[0], difficulty)
+    
+    userBoards.new_board(interaction.user.id, board, ans.ans[0], difficulty, last_board_img)
     await interaction.edit_original_response(
         content = await userBoards.get_board_msg(interaction.user.id, log_channel),
         view = SudokuView(interaction.user.id, interaction, log_channel)

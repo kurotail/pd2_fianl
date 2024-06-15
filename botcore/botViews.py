@@ -143,7 +143,7 @@ class SudokuView(discord.ui.View):
         await interaction.response.send_modal(ansModal)
         await ansModal.wait()
         
-        if ansModal.answer_num:
+        if 0 <= ansModal.answer_num <= 9:
             self.board_data.write_number(ansModal.answer_num)
             userBoards.set_user_board(self.userid, self.board_data)
             self.update_btn_state()

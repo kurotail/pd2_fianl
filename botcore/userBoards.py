@@ -39,13 +39,14 @@ def delete_board(userid: int) -> None:
     with open(BOARD_DATA_PATH, 'wb') as f:
         pickle.dump(user_datas, f)
 
-def new_board(userid: int, board: list[list[int]], ans_board: list[list[int]], difficulty: int) -> None:
+def new_board(userid: int, board: list[list[int]], ans_board: list[list[int]], difficulty: int, last_image_msgID: int | None) -> None:
     board_data = {
         "board": board,
         "user_ans_board": [[0]*9 for i in range(9)],
         "hint_board": [[0]*9 for i in range(9)],
         "ans_board": ans_board,
         "difficulty": difficulty,
+        "last_image_msgID": last_image_msgID,
         "x": 0,
         "y": 0
     }

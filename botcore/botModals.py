@@ -7,21 +7,23 @@ class AnswerModal(discord.ui.Modal):
             style = discord.TextStyle.short,
             label = "Answer",
             required = False,
-            placeholder = "數字 (1~9)"
+            placeholder = "0~9 or blank"
         ))
         self.answer_num: int = 0
         self.status: str = ""
         
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        try:
-            num = int(self.children[0].value)
-            if num < 1 or num > 9:
-                self.status = "請輸入整數 (1~9)"
-        except:
-            self.status = "請輸入整數 (1~9)"
+        num = 0
+        if self.children[0].value != "":
+            try:
+                num = int(self.children[0].value)
+                if num < 0 or num > 9:
+                    self.status = "輸入錯誤，請輸入 0~9 or blank"
+            except:
+                self.status = "輸入錯誤，請輸入 0~9 or blank"
         
         if self.status != "":
-            await interaction.response.defer(ephemeral=True)
+            await interaction.response.send_message(self.status, ephemeral=True)
         else:
             self.answer_num = num
             await interaction.response.defer(ephemeral=True)
