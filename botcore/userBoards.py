@@ -4,7 +4,7 @@ import discord
 from io import BytesIO
 import drawer
 from drawer import Animation
-from botcore import descrip
+from botcore import descript
 from botcore.classes import BoardData
 from localVals import BOARD_DATA_PATH
 import asyncio
@@ -103,7 +103,7 @@ async def get_board_msg(userid: int, log_channel: discord.channel, check_done: b
         board_data.last_image_msgID = img_msg.id
         set_user_board(userid, board_data)
         return (
-            f"Difficulty: {descrip.difficulty_list[board_data.difficulty]}\n"+
+            f"Difficulty: {descript.difficulty_list[board_data.difficulty]}\n"+
             f"Selected cell: {board_data.get_cell_num()}\n"+
             img_msg.attachments[0].url
         )

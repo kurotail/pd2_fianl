@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord import app_commands
 from sudoku.sudoku import SudokuResult
 from crawler import SudokuCrawler
-from botcore import descrip, userBoards
+from botcore import descript, userBoards
 from botcore.botViews import SudokuView, ConfirmView
 from localVals import *
 import asyncio
@@ -42,7 +42,7 @@ class Bot(commands.Bot):
 bot = Bot()
 sudoku_crawler = SudokuCrawler()
 
-@bot.tree.command(name="cheat", description=descrip.cheat)
+@bot.tree.command(name="cheat", description=descript.cheat)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
 @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
 async def cheat(interaction: discord.Integration) -> None:
@@ -77,7 +77,7 @@ async def help(interaction: discord.Integration) -> None:
     
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-@bot.tree.command(name="start_sudoku", description=descrip.start_sudoku)
+@bot.tree.command(name="start_sudoku", description=descript.start_sudoku)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
 @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
 async def start_sudoku(interaction: discord.Integration) -> None:
@@ -94,8 +94,8 @@ async def start_sudoku(interaction: discord.Integration) -> None:
         view = SudokuView(interaction.user.id, interaction, log_channel)
     )
 
-@bot.tree.command(name="new_sudoku", description=descrip.new_sudoku)
-@app_commands.describe(difficulty = descrip.new_sudoku_difficulty)
+@bot.tree.command(name="new_sudoku", description=descript.new_sudoku)
+@app_commands.describe(difficulty = descript.new_sudoku_difficulty)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
 @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
 async def new_sudoku(interaction: discord.Integration, difficulty: int) -> None:
