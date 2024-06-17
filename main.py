@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord import app_commands
 from sudoku.sudoku import SudokuResult
 from crawler import SudokuCrawler
-from botcore import descript, userBoards
+from botcore import descript, userBoards, botEmbeds
 from botcore.botViews import SudokuView, ConfirmView
 from localVals import *
 import asyncio
@@ -42,6 +42,11 @@ class Bot(commands.Bot):
 bot = Bot()
 sudoku_crawler = SudokuCrawler()
 
+@bot.tree.command(name="help", description=descript.help_command)
+@app_commands.guilds(discord.Object(id=GUILD_ID))
+async def help(interaction: discord.Integration) -> None:
+    await interaction.response.send_message(embed=botEmbeds.instructions(), ephemeral=True)
+
 @bot.tree.command(name="cheat", description=descript.cheat)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
 @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
@@ -65,17 +70,6 @@ async def cheat(interaction: discord.Integration) -> None:
         content = await userBoards.get_board_msg(interaction.user.id, log_channel),
         view = SudokuView(interaction.user.id, interaction, log_channel)
     )
-    
-@bot.tree.command(name="help", description=descrip.help_command)
-@app_commands.guilds(discord.Object(id=GUILD_ID))
-async def help(interaction: discord.Integration) -> None:
-    embed=discord.Embed(title="Commands Instructions", description="Here are all the commands and the functions of them.", color=0x1abaff)
-    embed.set_thumbnail(url="https://i.ibb.co/bNZp4WS/sudokun-avatar.png")
-    embed.add_field(name="/start_sudoku", value=descrip.help_embed_field1, inline=False)
-    embed.add_field(name="/new_sudoku", value=descrip.help_embed_field2, inline=False)
-    embed.add_field(name="/cheat", value=descrip.help_embed_field3, inline=False)
-    
-    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="start_sudoku", description=descript.start_sudoku)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
