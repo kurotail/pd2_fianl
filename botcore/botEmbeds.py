@@ -1,6 +1,6 @@
 import discord
 
-def instructions(icon_url: str) -> discord.Embed:
+def instructions() -> discord.Embed:
     """
     Construct an ```Embed``` object that lists and explains the commands for a Sudoku game bot.
     """
@@ -12,7 +12,6 @@ def instructions(icon_url: str) -> discord.Embed:
     
     embed=discord.Embed(title=title, description=description, color=0x1abaff)
     embed.set_thumbnail(url="https://i.ibb.co/bNZp4WS/sudokun-avatar.png")
-    embed.set_author(name="すど君", icon_url=icon_url)
     embed.add_field(name="/start_sudoku", value=value_start_sudoku, inline=False)
     embed.add_field(name="/new_sudoku", value=value_new_sudoku, inline=False)
     embed.add_field(name="/cheat", value=value_cheat, inline=False)
