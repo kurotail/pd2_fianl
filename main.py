@@ -45,7 +45,10 @@ sudoku_crawler = SudokuCrawler()
 @bot.tree.command(name="help", description=descript.help_command)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
 async def help(interaction: discord.Integration) -> None:
-    await interaction.response.send_message(embed=botEmbeds.instructions(), ephemeral=True)
+    await interaction.response.send_message(
+        embed = botEmbeds.instructions(bot.user.display_avatar),
+        ephemeral = True
+    )
 
 @bot.tree.command(name="cheat", description=descript.cheat)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
