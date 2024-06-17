@@ -65,6 +65,17 @@ async def cheat(interaction: discord.Integration) -> None:
         content = await userBoards.get_board_msg(interaction.user.id, log_channel),
         view = SudokuView(interaction.user.id, interaction, log_channel)
     )
+    
+@bot.tree.command(name="help", description=descrip.help_command)
+@app_commands.guilds(discord.Object(id=GUILD_ID))
+async def help(interaction: discord.Integration) -> None:
+    embed=discord.Embed(title="Commands Instructions", description="Here are all the commands and the functions of them.", color=0x1abaff)
+    embed.set_thumbnail(url="https://i.ibb.co/bNZp4WS/sudokun-avatar.png")
+    embed.add_field(name="/start_sudoku", value=descrip.help_embed_field1, inline=False)
+    embed.add_field(name="/new_sudoku", value=descrip.help_embed_field2, inline=False)
+    embed.add_field(name="/cheat", value=descrip.help_embed_field3, inline=False)
+    
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="start_sudoku", description=descrip.start_sudoku)
 @app_commands.guilds(discord.Object(id=GUILD_ID))
