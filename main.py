@@ -63,7 +63,7 @@ async def cheat(interaction: discord.Integration) -> None:
     for y in range(9):
         for x in range(9):
             if board_data.board[y][x] == 0:
-                board_data.user_ans_board[y][x] = board_data.ans_board[y][x]
+                board_data.write_number(board_data.ans_board[y][x])
     userBoards.set_user_board(interaction.user.id, board_data)
     
     await interaction.edit_original_response(
