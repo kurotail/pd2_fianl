@@ -23,7 +23,14 @@ class BoardData():
     def set_hint(self) -> None:
         self.user_ans_board[self.y][self.x] = 0
         self.hint_board[self.y][self.x] = self.ans_board[self.y][self.x]
-        
+    
+    def write_all_ans(self) -> None:
+        for y in range(9):
+            for x in range(9):
+                if self.board[y][x] == 0:
+                    self.hint_board[y][x] = 0
+                    self.user_ans_board[y][x] = self.ans_board[y][x]
+    
     def set_pos(self, x: int, y: int) -> None:
         if 0 <= x < 9 and 0 <= y < 9:
             self.x = x
