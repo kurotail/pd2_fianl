@@ -23,7 +23,7 @@ class Bot(commands.Bot):
         )
 
     async def setup_hook(self) -> None:
-        await self.tree.sync(guild=discord.Object(guild=None))
+        await self.tree.sync(guild=None)
         self.tree.on_error = self.on_app_command_error
         print(f"Now login user: {self.user}.")
 
